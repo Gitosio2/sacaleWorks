@@ -169,3 +169,5 @@ export const quoteRelatedModels = pgTable(
   },
   (t) => [primaryKey({ columns: [t.quoteId, t.modelId] })],
 );
+
+export * from "./auth-schema";
