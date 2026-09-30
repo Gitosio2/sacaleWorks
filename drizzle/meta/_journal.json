@@ -22,6 +22,20 @@
       "when": 1790789842508,
       "tag": "0002_model_company",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790790481878,
+      "tag": "0003_time_minutes_add",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790790491430,
+      "tag": "0004_time_minutes_drop_hours",
+      "breakpoints": true
     }
   ]
 }

@@ -39,10 +39,10 @@ export default async function ModelsPage() {
         {rows.map(({ model: m, clientName }) => (
           <li key={m.id} className="flex items-center justify-between gap-4 rounded border p-3">
             <div>
-              <p className="font-medium">
+              <Link href={`/models/${m.id}`} className="font-medium underline">
                 {m.name}
                 {m.company ? ` · ${m.company}` : ""}
-              </p>
+              </Link>
               <p className="text-sm text-zinc-500">
                 {clientName ?? "Own project"} · {phaseLabels[m.phase]} · {formatEuros(m.priceCents)}
               </p>

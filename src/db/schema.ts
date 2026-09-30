@@ -4,7 +4,6 @@ import {
   date,
   index,
   integer,
-  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -153,7 +152,7 @@ export const timeEntries = pgTable("time_entries", {
     .notNull()
     .references(() => models.id, { onDelete: "cascade" }),
   workedOn: date("worked_on").notNull(),
-  hours: numeric("hours", { precision: 5, scale: 2 }).notNull(),
+  minutes: integer("minutes").notNull(),
 });
 
 // Links a quote to past models marked as the same or similar.
