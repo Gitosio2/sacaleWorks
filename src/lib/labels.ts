@@ -27,6 +27,33 @@ export function parseEuros(raw: string) {
   return cents;
 }
 
+// "1/4", "3/8", "0,3" or "2" -> number. Empty -> null. Invalid -> throws.
+export function parseQuantity(raw: string) {
+  const value = raw.trim().replace(",", ".");
+  if (!value) return null;
+  const fraction = /^(\d+)\s*\/\s*(\d+)$/.exec(value);
+  const n = fraction ? Number(fraction[1]) / Number(fraction[2]) : Number(value);
+  if (!Number.isFinite(n) || n <= 0 || n > 100) {
+    throw new Error("Invalid quantity");
+  }
+  return n;
+}
+
+// 0.25 -> "1/4", 1.5 -> "1 1/2", 0.3 -> "0.3"
+export function formatQuantity(n: number) {
+  for (const d of [1, 2, 4, 8, 16, 32]) {
+    const scaled = n * d;
+    if (Math.abs(scaled - Math.round(scaled)) < 1e-6) {
+      const whole = Math.floor(Math.round(scaled) / d);
+      const num = Math.round(scaled) % d;
+      if (num === 0) return String(whole);
+      const frac = `${num}/${d}`;
+      return whole > 0 ? `${whole} ${frac}` : frac;
+    }
+  }
+  return String(Number(n.toFixed(3)));
+}
+
 // 90 -> "01:30"
 export function formatDuration(totalMinutes: number) {
   const h = Math.floor(totalMinutes / 60);

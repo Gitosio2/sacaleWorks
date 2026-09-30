@@ -2,16 +2,31 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, desc, eq, sum } from "drizzle-orm";
 import { db } from "@/db";
-import { clients, models, parts, supplyStatus, timeEntries } from "@/db/schema";
+import {
+  clients,
+  consumables,
+  modelConsumables,
+  models,
+  parts,
+  supplyStatus,
+  timeEntries,
+} from "@/db/schema";
 import {
   formatDuration,
   formatEuros,
+  formatQuantity,
   phaseLabels,
   supplyStatusLabels,
 } from "@/lib/labels";
 import { requireUser } from "@/lib/session";
 import { addTimeEntry, deleteTimeEntry } from "./actions";
+import {
+  removeModelConsumable,
+  setModelConsumable,
+  updateModelConsumableQuantity,
+} from "./consumable-actions";
 import { addPart, deletePart, updatePartStatus } from "./part-actions";
+import { QuantityFields } from "./quantity-fields";
 
 export default async function ModelDetailPage({
   params,
@@ -29,7 +44,8 @@ export default async function ModelDetailPage({
   if (!row) notFound();
   const { model: m, clientName } = row;
 
-  const [entries, [{ total }], partRows] = await Promise.all([
+  const [entries, [{ total }], partRows, linkedRows, consumableOptions] =
+    await Promise.all([
     db
       .select()
       .from(timeEntries)
@@ -44,8 +60,30 @@ export default async function ModelDetailPage({
       .from(parts)
       .where(and(eq(parts.modelId, id), eq(parts.userId, user.id)))
       .orderBy(parts.description),
+    db
+      .select({ consumable: consumables, quantity: modelConsumables.quantity })
+      .from(modelConsumables)
+      .innerJoin(consumables, eq(modelConsumables.consumableId, consumables.id))
+      .where(
+        and(eq(modelConsumables.modelId, id), eq(consumables.userId, user.id)),
+      )
+      .orderBy(consumables.description),
+    db
+      .select({ id: consumables.id, description: consumables.description })
+      .from(consumables)
+      .where(eq(consumables.userId, user.id))
+      .orderBy(consumables.description),
   ]);
   const partsTotalCents = partRows.reduce((acc, p) => acc + (p.priceCents ?? 0), 0);
+  // Cost of a consumable on this model = unit price x fraction used.
+  const consumableCost = (priceCents: number | null, quantity: string | null) =>
+    priceCents !== null && quantity !== null
+      ? Math.round(priceCents * Number(quantity))
+      : null;
+  const consumablesTotalCents = linkedRows.reduce(
+    (acc, r) => acc + (consumableCost(r.consumable.priceCents, r.quantity) ?? 0),
+    0,
+  );
 
   const today = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Europe/Madrid",
@@ -189,6 +227,74 @@ export default async function ModelDetailPage({
               </form>
             </li>
           ))}
+        </ul>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xl font-semibold">
+          Consumables: {formatEuros(consumablesTotalCents)}
+        </h2>
+
+        {consumableOptions.length === 0 ? (
+          <p className="text-zinc-500">
+            Add consumables first in{" "}
+            <Link href="/consumables" className="underline">Consumables</Link>.
+          </p>
+        ) : (
+          <form action={setModelConsumable.bind(null, id)} className="flex flex-wrap gap-3">
+            <select name="consumableId" required className={input}>
+              {consumableOptions.map((c) => (
+                <option key={c.id} value={c.id}>{c.description}</option>
+              ))}
+            </select>
+            <QuantityFields />
+            <button type="submit" className="rounded bg-foreground px-3 py-2 text-background">
+              Add
+            </button>
+          </form>
+        )}
+
+        <ul className="flex flex-col gap-2">
+          {linkedRows.length === 0 && (
+            <li className="text-zinc-500">No consumables linked yet.</li>
+          )}
+          {linkedRows.map(({ consumable: c, quantity }) => {
+            const cost = consumableCost(c.priceCents, quantity);
+            return (
+              <li key={c.id} className="flex flex-col gap-2 rounded border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{c.description}</p>
+                    <p className="text-sm text-zinc-500">
+                      {quantity !== null
+                        ? `${formatQuantity(Number(quantity))} unit`
+                        : "Quantity not set"}
+                      {" · "}
+                      {cost !== null
+                        ? `${formatEuros(cost)} (unit ${formatEuros(c.priceCents)})`
+                        : `unit ${formatEuros(c.priceCents)}`}
+                      {" · "}
+                      {supplyStatusLabels[c.status]}
+                    </p>
+                  </div>
+                  <form action={removeModelConsumable.bind(null, id, c.id)}>
+                    <button type="submit" className="text-sm text-red-600 underline">
+                      Remove
+                    </button>
+                  </form>
+                </div>
+                <form
+                  action={updateModelConsumableQuantity.bind(null, id, c.id)}
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  <QuantityFields />
+                  <button type="submit" className="text-sm underline">
+                    Update quantity
+                  </button>
+                </form>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </main>

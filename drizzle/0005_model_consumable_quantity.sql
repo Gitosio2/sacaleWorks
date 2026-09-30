@@ -1,0 +1,1 @@
+ALTER TABLE "model_consumables" ADD COLUMN "quantity" numeric(8, 5);

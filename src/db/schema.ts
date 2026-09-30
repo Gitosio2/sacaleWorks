@@ -4,6 +4,7 @@ import {
   date,
   index,
   integer,
+  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -140,6 +141,8 @@ export const modelConsumables = pgTable(
     consumableId: uuid("consumable_id")
       .notNull()
       .references(() => consumables.id, { onDelete: "cascade" }),
+    // Optional amount used, as a fraction of one unit (0.5 = half a pot).
+    quantity: numeric("quantity", { precision: 8, scale: 5 }),
   },
   (t) => [primaryKey({ columns: [t.modelId, t.consumableId] })],
 );
