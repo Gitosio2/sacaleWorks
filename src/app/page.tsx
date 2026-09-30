@@ -10,6 +10,9 @@ export default function Home() {
       <Link href="/clients" className="underline">
         Clients
       </Link>
+      <Link href="/models" className="underline">
+        Models
+      </Link>
     </main>
   );
 }

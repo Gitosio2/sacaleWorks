@@ -60,6 +60,8 @@ export const models = pgTable(
       onDelete: "set null",
     }),
     name: text("name").notNull(),
+    // Company of the real-world subject (e.g. an airline or car brand).
+    company: text("company"),
     priceCents: integer("price_cents"),
     phase: modelPhase("phase").notNull().default("not_started"),
     requestedDate: date("requested_date"),
