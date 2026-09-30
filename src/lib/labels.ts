@@ -12,6 +12,21 @@ export const phaseLabels: Record<ModelPhase, string> = {
   finished: "Finished",
 };
 
+export const supplyStatusLabels = {
+  to_order: "To order",
+  ordered: "Ordered",
+  in_hand: "In hand",
+} as const;
+
+// "12,50" or "12.5" -> 1250 (cents). Empty -> null. Invalid -> throws.
+export function parseEuros(raw: string) {
+  const value = raw.trim().replace(",", ".");
+  if (!value) return null;
+  const cents = Math.round(Number(value) * 100);
+  if (!Number.isFinite(cents) || cents < 0) throw new Error("Invalid price");
+  return cents;
+}
+
 // 90 -> "01:30"
 export function formatDuration(totalMinutes: number) {
   const h = Math.floor(totalMinutes / 60);

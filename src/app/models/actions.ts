@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { clients, models, modelPhase } from "@/db/schema";
+import { parseEuros } from "@/lib/labels";
 import { requireUser } from "@/lib/session";
 
 async function parseModel(formData: FormData, userId: string) {
@@ -16,11 +17,7 @@ async function parseModel(formData: FormData, userId: string) {
     throw new Error("Invalid phase");
   }
 
-  const priceRaw = String(formData.get("price") ?? "").trim().replace(",", ".");
-  const priceCents = priceRaw ? Math.round(Number(priceRaw) * 100) : null;
-  if (priceCents !== null && (!Number.isFinite(priceCents) || priceCents < 0)) {
-    throw new Error("Invalid price");
-  }
+  const priceCents = parseEuros(String(formData.get("price") ?? ""));
 
   // The client must belong to the current user.
   const clientId = String(formData.get("clientId") ?? "") || null;
