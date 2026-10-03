@@ -13,6 +13,9 @@ export default function Home() {
       <Link href="/models" className="underline">
         Models
       </Link>
+      <Link href="/quotes" className="underline">
+        Quotes
+      </Link>
       <Link href="/consumables" className="underline">
         Consumables
       </Link>

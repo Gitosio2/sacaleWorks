@@ -12,6 +12,12 @@ export const phaseLabels: Record<ModelPhase, string> = {
   finished: "Finished",
 };
 
+export const quoteStatusLabels = {
+  open: "Open",
+  accepted: "Accepted",
+  rejected: "Rejected",
+} as const;
+
 export const supplyStatusLabels = {
   to_order: "To order",
   ordered: "Ordered",
