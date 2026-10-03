@@ -8,7 +8,6 @@ import {
   modelConsumables,
   models,
   parts,
-  supplyStatus,
   timeEntries,
 } from "@/db/schema";
 import {
@@ -26,6 +25,7 @@ import {
   updateModelConsumableQuantity,
 } from "./consumable-actions";
 import { addPart, deletePart, updatePartStatus } from "./part-actions";
+import { PartsSection } from "@/app/parts-section";
 import { QuantityFields } from "./quantity-fields";
 
 export default async function ModelDetailPage({
@@ -74,7 +74,6 @@ export default async function ModelDetailPage({
       .where(eq(consumables.userId, user.id))
       .orderBy(consumables.description),
   ]);
-  const partsTotalCents = partRows.reduce((acc, p) => acc + (p.priceCents ?? 0), 0);
   // Cost of a consumable on this model = unit price x fraction used.
   const consumableCost = (priceCents: number | null, quantity: string | null) =>
     priceCents !== null && quantity !== null
@@ -161,74 +160,12 @@ export default async function ModelDetailPage({
         </ul>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">
-          Parts: {formatEuros(partsTotalCents)}
-        </h2>
-
-        <form action={addPart.bind(null, id)} className="flex flex-col gap-3">
-          <input name="description" placeholder="Description" required className={input} />
-          <div className="flex gap-3">
-            <input name="brand" placeholder="Brand" className={`${input} w-full`} />
-            <input name="reference" placeholder="Reference" className={`${input} w-full`} />
-          </div>
-          <div className="flex gap-3">
-            <input name="price" inputMode="decimal" placeholder="Price (€)" className={`${input} w-full`} />
-            <input name="store" placeholder="Store" className={`${input} w-full`} />
-          </div>
-          <input name="url" type="url" placeholder="Store link (https://...)" className={input} />
-          <select name="status" defaultValue="to_order" className={input}>
-            {supplyStatus.enumValues.map((s) => (
-              <option key={s} value={s}>{supplyStatusLabels[s]}</option>
-            ))}
-          </select>
-          <button type="submit" className="rounded bg-foreground px-3 py-2 text-background">
-            Add part
-          </button>
-        </form>
-
-        <ul className="flex flex-col gap-2">
-          {partRows.length === 0 && (
-            <li className="text-zinc-500">No parts yet.</li>
-          )}
-          {partRows.map((p) => (
-            <li key={p.id} className="flex flex-col gap-2 rounded border p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-medium">{p.description}</p>
-                  <p className="text-sm text-zinc-500">
-                    {[p.brand, p.reference].filter(Boolean).join(" · ") || "—"}
-                    {" · "}
-                    {formatEuros(p.priceCents)}
-                  </p>
-                  <p className="text-sm text-zinc-500">
-                    {p.url ? (
-                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="underline">
-                        {p.store ?? "Store link"}
-                      </a>
-                    ) : (
-                      (p.store ?? "No store")
-                    )}
-                  </p>
-                </div>
-                <form action={deletePart.bind(null, id, p.id)}>
-                  <button type="submit" className="text-sm text-red-600 underline">
-                    Delete
-                  </button>
-                </form>
-              </div>
-              <form action={updatePartStatus.bind(null, id, p.id)} className="flex gap-2">
-                <select name="status" defaultValue={p.status} className="rounded border px-2 py-1 text-sm">
-                  {supplyStatus.enumValues.map((s) => (
-                    <option key={s} value={s}>{supplyStatusLabels[s]}</option>
-                  ))}
-                </select>
-                <button type="submit" className="text-sm underline">Update status</button>
-              </form>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <PartsSection
+        parts={partRows}
+        add={addPart.bind(null, id)}
+        updateStatus={updatePartStatus.bind(null, id)}
+        remove={deletePart.bind(null, id)}
+      />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold">

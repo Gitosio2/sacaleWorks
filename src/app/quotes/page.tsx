@@ -44,7 +44,9 @@ export default async function QuotesPage() {
         {rows.map(({ quote: q, clientName }) => (
           <li key={q.id} className="flex items-center justify-between gap-4 rounded border p-3">
             <div>
-              <p className="font-medium">{q.title}</p>
+              <Link href={`/quotes/${q.id}`} className="font-medium underline">
+                {q.title}
+              </Link>
               <p className="text-sm text-zinc-500">
                 {clientName ?? "No client"} · {quoteStatusLabels[q.status]} · {formatEuros(q.priceCents)}
               </p>
